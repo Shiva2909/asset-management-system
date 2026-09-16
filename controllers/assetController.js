@@ -1,0 +1,248 @@
+const { sql } = require('../db'); // DB Connection
+
+// 1. Get All Assets with Search, Filtering, and Pagination
+const getAssets = async (req, res) => {
+    try {
+        let { page, limit, search, category, status } = req.query;
+
+        // Default pagination values
+        page = parseInt(page) || 1;
+        limit = parseInt(limit) || 10;
+        const offset = (page - 1) * limit;
+
+        const request = new sql.Request();
+        
+        // Base query updated with Double JOIN and Dynamic Fields
+        let baseQuery = `
+            SELECT a.AssetID, a.AssetTag, a.AssetName, a.VendorName, 
+                   a.PurchaseDate, a.Price, a.WarrantyExpiryDate, a.Status, 
+                   t.TypeID, t.TypeName, c.CategoryID, c.CategoryName,
+                   a.RAM, a.Processor, a.Storage, a.MAC_Address,
+                   a.PhoneNumber, a.ServiceProvider, a.IMEI_Number,
+                   a.Material, a.Color, a.Dimensions
+            FROM Assets a
+            LEFT JOIN AssetTypes t ON a.TypeID = t.TypeID
+            LEFT JOIN Categories c ON t.CategoryID = c.CategoryID
+            WHERE 1=1
+        `;
+
+        // Base count query updated with Double JOIN
+        let countQuery = `
+            SELECT COUNT(*) AS total 
+            FROM Assets a
+            LEFT JOIN AssetTypes t ON a.TypeID = t.TypeID
+            LEFT JOIN Categories c ON t.CategoryID = c.CategoryID
+            WHERE 1=1
+        `;
+
+        // 1. Search filter
+        if (search) {
+            request.input('Search', sql.VarChar, `%${search}%`);
+            const searchCondition = ` AND (a.AssetName LIKE @Search OR a.AssetTag LIKE @Search)`;
+            baseQuery += searchCondition;
+            countQuery += searchCondition;
+        }
+
+        // 2. Category filter (Updated to check t.CategoryID)
+        if (category) {
+            request.input('Category', sql.Int, category);
+            const catCondition = ` AND t.CategoryID = @Category`;
+            baseQuery += catCondition;
+            countQuery += catCondition;
+        }
+
+        // 3. Status filter
+        if (status) {
+            request.input('Status', sql.VarChar, status);
+            const statusCondition = ` AND a.Status = @Status`;
+            baseQuery += statusCondition;
+            countQuery += statusCondition;
+        }
+
+        baseQuery += ` ORDER BY a.AssetID DESC OFFSET @Offset ROWS FETCH NEXT @Limit ROWS ONLY`;
+        
+        request.input('Offset', sql.Int, offset);
+        request.input('Limit', sql.Int, limit);
+
+        const result = await request.query(baseQuery);
+        
+        const countRequest = new sql.Request();
+        if (search) countRequest.input('Search', sql.VarChar, `%${search}%`);
+        if (category) countRequest.input('Category', sql.Int, category);
+        if (status) countRequest.input('Status', sql.VarChar, status);
+        
+        const countResult = await countRequest.query(countQuery);
+        const totalRecords = countResult.recordset[0].total;
+
+        res.status(200).json({
+            success: true,
+            currentPage: page,
+            totalPages: Math.ceil(totalRecords / limit),
+            totalRecords: totalRecords,
+            count: result.recordset.length,
+            data: result.recordset
+        });
+
+    } catch (error) {
+        console.error('Error fetching assets:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
+
+// 2. Add New Asset (No changes needed, already perfect)
+const createAsset = async (req, res) => {
+    try {
+        const { 
+            AssetTag, AssetName, TypeID, VendorName, PurchaseDate, Price, WarrantyExpiryDate, Status,
+            RAM, Processor, Storage, MAC_Address,
+            PhoneNumber, ServiceProvider, IMEI_Number,
+            Material, Color, Dimensions
+        } = req.body;
+
+        if (!AssetTag || !AssetName || !TypeID) {
+            return res.status(400).json({ success: false, message: 'AssetTag, AssetName, and TypeID are required.' });
+        }
+
+        const request = new sql.Request();
+        
+        request.input('AssetTag', sql.VarChar, AssetTag);
+        request.input('AssetName', sql.VarChar, AssetName);
+        request.input('TypeID', sql.Int, TypeID); 
+        request.input('VendorName', sql.VarChar, VendorName || null);
+        request.input('PurchaseDate', sql.Date, PurchaseDate || null);
+        request.input('Price', sql.Decimal(10,2), Price || null);
+        request.input('WarrantyExpiryDate', sql.Date, WarrantyExpiryDate || null);
+        request.input('Status', sql.VarChar, Status || 'Available');
+
+        request.input('RAM', sql.VarChar, RAM || null);
+        request.input('Processor', sql.VarChar, Processor || null);
+        request.input('Storage', sql.VarChar, Storage || null);
+        request.input('MAC_Address', sql.VarChar, MAC_Address || null);
+        
+        request.input('PhoneNumber', sql.VarChar, PhoneNumber || null);
+        request.input('ServiceProvider', sql.VarChar, ServiceProvider || null);
+        request.input('IMEI_Number', sql.VarChar, IMEI_Number || null);
+        
+        request.input('Material', sql.VarChar, Material || null);
+        request.input('Color', sql.VarChar, Color || null);
+        request.input('Dimensions', sql.VarChar, Dimensions || null);
+
+        const query = `
+            INSERT INTO Assets (
+                AssetTag, AssetName, TypeID, VendorName, PurchaseDate, Price, WarrantyExpiryDate, Status,
+                RAM, Processor, Storage, MAC_Address,
+                PhoneNumber, ServiceProvider, IMEI_Number,
+                Material, Color, Dimensions
+            ) 
+            VALUES (
+                @AssetTag, @AssetName, @TypeID, @VendorName, @PurchaseDate, @Price, @WarrantyExpiryDate, @Status,
+                @RAM, @Processor, @Storage, @MAC_Address,
+                @PhoneNumber, @ServiceProvider, @IMEI_Number,
+                @Material, @Color, @Dimensions
+            )
+        `;
+
+        await request.query(query);
+        res.status(201).json({ success: true, message: 'Asset added successfully ' });
+
+    } catch (error) {
+        console.error('Add Asset Error:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
+
+// 3. Update details of an existing asset (Updated with Dynamic Fields and TypeID)
+const updateAsset = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { 
+            assetTag, assetName, typeID, vendorName, purchaseDate, price, warrantyExpiryDate, status,
+            RAM, Processor, Storage, MAC_Address,
+            PhoneNumber, ServiceProvider, IMEI_Number,
+            Material, Color, Dimensions
+        } = req.body;
+
+        const request = new sql.Request();
+        request.input('AssetID', sql.Int, id);
+        request.input('AssetTag', sql.VarChar, assetTag);
+        request.input('AssetName', sql.VarChar, assetName);
+        request.input('TypeID', sql.Int, typeID); // categoryID ki jagah typeID use hoga ab
+        request.input('VendorName', sql.VarChar, vendorName || null);
+        request.input('PurchaseDate', sql.Date, purchaseDate || null);
+        request.input('Price', sql.Decimal(10, 2), price || null);
+        request.input('WarrantyExpiryDate', sql.Date, warrantyExpiryDate || null);
+        request.input('Status', sql.VarChar, status || 'Available');
+        
+        // Dynamic Fields
+        request.input('RAM', sql.VarChar, RAM || null);
+        request.input('Processor', sql.VarChar, Processor || null);
+        request.input('Storage', sql.VarChar, Storage || null);
+        request.input('MAC_Address', sql.VarChar, MAC_Address || null);
+        
+        request.input('PhoneNumber', sql.VarChar, PhoneNumber || null);
+        request.input('ServiceProvider', sql.VarChar, ServiceProvider || null);
+        request.input('IMEI_Number', sql.VarChar, IMEI_Number || null);
+        
+        request.input('Material', sql.VarChar, Material || null);
+        request.input('Color', sql.VarChar, Color || null);
+        request.input('Dimensions', sql.VarChar, Dimensions || null);
+
+        const query = `
+            UPDATE Assets 
+            SET AssetTag = @AssetTag,
+                AssetName = @AssetName, 
+                TypeID = @TypeID, 
+                VendorName = @VendorName,
+                PurchaseDate = @PurchaseDate, 
+                Price = @Price, 
+                WarrantyExpiryDate = @WarrantyExpiryDate,
+                Status = @Status,
+                RAM = @RAM, Processor = @Processor, Storage = @Storage, MAC_Address = @MAC_Address,
+                PhoneNumber = @PhoneNumber, ServiceProvider = @ServiceProvider, IMEI_Number = @IMEI_Number,
+                Material = @Material, Color = @Color, Dimensions = @Dimensions
+            WHERE AssetID = @AssetID
+        `;
+        
+        const result = await request.query(query);
+
+        if (result.rowsAffected[0] === 0) {
+            return res.status(404).json({ success: false, message: 'Asset not found.' });
+        }
+
+        res.status(200).json({ success: true, message: 'Asset updated successfully.' });
+    } catch (error) {
+        if (error.number === 2627) {
+            return res.status(400).json({ success: false, message: 'This AssetTag already exists!' });
+        }
+        console.error('Error updating asset:', error.message);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
+
+// 4. Soft delete an asset (No changes needed)
+const deleteAsset = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const request = new sql.Request();
+        request.input('AssetID', sql.Int, id);
+
+        const query = `
+            UPDATE Assets 
+            SET Status = 'Decommissioned' 
+            WHERE AssetID = @AssetID
+        `;
+        
+        const result = await request.query(query);
+
+        if (result.rowsAffected[0] === 0) {
+            return res.status(404).json({ success: false, message: 'Asset not found.' });
+        }
+
+        res.status(200).json({ success: true, message: 'Asset decommissioned (soft deleted) successfully.' });
+    } catch (error) {
+        console.error('Error deleting asset:', error.message);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
+
+module.exports = { getAssets, createAsset, updateAsset, deleteAsset };
