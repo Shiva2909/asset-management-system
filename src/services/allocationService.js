@@ -1,38 +1,53 @@
-import { getStorageItem, setStorageItem } from "../utils/helpers";
-import { INITIAL_ALLOCATIONS } from "../data/mockAllocations";
-import { ASSET_STATUS } from "../utils/constants";
-
-const STORAGE_KEY = "ams_allocations_data";
+import { apiUrl } from "./api";
 
 export const allocationService = {
-  getAllocations() {
-    return getStorageItem(STORAGE_KEY, INITIAL_ALLOCATIONS);
+  // 1. Get All Allocations
+  async getAllocations() {
+    try {
+      const response = await apiUrl.get("/allocations");
+      return response.data.data || response.data;
+    } catch (error) {
+      console.error("Error fetching allocations:", error);
+      throw error;
+    }
   },
 
-  saveAllocations(allocations) {
-    setStorageItem(STORAGE_KEY, allocations);
+  // 2. Allocate New Asset
+  async createAllocation(data) {
+    try {
+      const response = await apiUrl.post("/allocations/assign", data);
+
+      return response.data;
+    } catch (error) {
+      console.error("Error creating allocation:", error);
+      throw error;
+    }
   },
 
-  createAllocation(data) {
-    const allocations = this.getAllocations();
-    const newRecord = {
-      id: `ALC-${Date.now().toString().slice(-4)}`,
-      ...data,
-      returnDate: null,
-    };
-    this.saveAllocations([newRecord, ...allocations]);
-    assetService.updateAsset(data.assetTag, { status: ASSET_STATUS.ASSIGNED });
-    return newRecord;
+  // 3. Return Asset
+  async returnAsset(allocationId, remarksData = {}) {
+    try {
+      const response = await apiUrl.put(
+        `/allocations/return/${allocationId}`,
+        remarksData,
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Error returning asset:", error);
+      throw error;
+    }
   },
 
-  returnAsset(allocationId, assetTag) {
-    const allocations = this.getAllocations();
-    const today = new Date().toISOString().split("T")[0];
-    const updated = allocations.map((al) =>
-      al.id === allocationId ? { ...al, returnDate: today } : al,
-    );
-    this.saveAllocations(updated);
-    assetService.updateAsset(assetTag, { status: ASSET_STATUS.AVAILABLE });
-    return true;
+  // 4. Get Allocation History by Asset ID
+  async getAllocationHistory(assetId) {
+    try {
+      const response = await apiUrl.get(`/allocations/history/${assetId}`);
+
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching allocation history:", error);
+      throw error;
+    }
   },
 };

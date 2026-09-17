@@ -2,7 +2,11 @@ import React from "react";
 import { Table } from "../common/Table";
 import { AllocationRow } from "./AllocationRow";
 
-export const AllocationTable = ({ allocations = [], onReturn }) => {
+export const AllocationTable = ({
+  allocations = [],
+  onReturn,
+  onViewHistory,
+}) => {
   const headers = [
     "Asset Tag",
     "Asset Name",
@@ -20,7 +24,12 @@ export const AllocationTable = ({ allocations = [], onReturn }) => {
       emptyMessage="No asset allocation records logged"
     >
       {allocations.map((alloc) => (
-        <AllocationRow key={alloc.id} allocation={alloc} onReturn={onReturn} />
+        <AllocationRow
+          key={alloc.id ?? alloc.AllocationID}
+          allocation={alloc}
+          onReturn={onReturn}
+          onViewHistory={onViewHistory}
+        />
       ))}
     </Table>
   );

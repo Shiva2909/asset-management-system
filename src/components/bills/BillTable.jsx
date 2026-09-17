@@ -12,18 +12,17 @@ export const BillTable = ({ bills = [], onPreview }) => {
     "Documentation",
   ];
 
+  const safeBills = Array.isArray(bills) ? bills : [];
+
   return (
     <Table
       headers={headers}
-      count={bills.length}
+      count={safeBills.length}
       emptyMessage="No invoices or bills currently recorded"
     >
-      {bills.map((bill) => (
-        <BillRow
-          key={bill.id || bill.billNumber}
-          bill={bill}
-          onPreview={onPreview}
-        />
+      {safeBills.map((bill) => (
+        // ID ko backend wale BillID se replace kiya
+        <BillRow key={bill.BillID} bill={bill} onPreview={onPreview} />
       ))}
     </Table>
   );

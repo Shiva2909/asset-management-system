@@ -34,53 +34,57 @@ export default function Employees() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-8">
-      <div className="mx-auto max-w-6xl">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-900">Employees</h1>
+    <div className="min-h-screen bg-slate-50 px-3 pt-0 pb-3">
+      <div className="mx-auto w-full max-w-6xl">
+        {/* HEADER */}
 
-          <p className="mt-1 text-sm text-slate-500">Employee information</p>
+        <div className="mb-3 mt-0">
+          <h1 className="text-lg font-semibold text-slate-900">Employees</h1>
+
+          <p className="text-[11px] text-slate-500">Employee information</p>
         </div>
 
-        {/* Loading */}
+        {/* LOADING */}
+
         {loading && (
-          <div className="rounded-xl border border-slate-200 bg-white p-8 text-center">
-            <p className="text-sm text-slate-500">Loading employees...</p>
+          <div className="rounded-lg border border-slate-200 bg-white p-5 text-center">
+            <p className="text-xs text-slate-500">Loading employees...</p>
           </div>
         )}
 
-        {/* Error */}
+        {/* ERROR */}
+
         {!loading && error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-5">
-            <p className="text-sm font-medium text-red-700">{error}</p>
+          <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+            <p className="text-xs font-medium text-red-700">{error}</p>
           </div>
         )}
 
-        {/* Employee Data */}
+        {/* EMPLOYEE DATA */}
+
         {!loading && !error && (
-          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead className="border-b border-slate-200 bg-slate-50">
                   <tr>
-                    <th className="px-6 py-4 text-sm font-semibold text-slate-700">
+                    <th className="px-3 py-2 text-[11px] font-semibold text-slate-700">
                       ID
                     </th>
 
-                    <th className="px-6 py-4 text-sm font-semibold text-slate-700">
+                    <th className="px-3 py-2 text-[11px] font-semibold text-slate-700">
                       Employee ID
                     </th>
 
-                    <th className="px-6 py-4 text-sm font-semibold text-slate-700">
+                    <th className="px-3 py-2 text-[11px] font-semibold text-slate-700">
                       Employee Name
                     </th>
 
-                    <th className="px-6 py-4 text-sm font-semibold text-slate-700">
+                    <th className="px-3 py-2 text-[11px] font-semibold text-slate-700">
                       Employee Code
                     </th>
 
-                    <th className="px-6 py-4 text-sm font-semibold text-slate-700">
+                    <th className="px-3 py-2 text-[11px] font-semibold text-slate-700">
                       Department
                     </th>
                   </tr>
@@ -89,23 +93,23 @@ export default function Employees() {
                 <tbody className="divide-y divide-slate-100">
                   {employees.map((employee) => (
                     <tr key={employee.id} className="hover:bg-slate-50">
-                      <td className="px-6 py-4 text-sm text-slate-600">
+                      <td className="px-3 py-2 text-[11px] text-slate-600">
                         {employee.id}
                       </td>
 
-                      <td className="px-6 py-4 text-sm font-medium text-slate-800">
+                      <td className="px-3 py-2 text-[11px] font-medium text-slate-800">
                         {employee.empid}
                       </td>
 
-                      <td className="px-6 py-4 text-sm font-medium text-slate-800">
+                      <td className="px-3 py-2 text-[11px] font-medium text-slate-800">
                         {employee.emp_name}
                       </td>
 
-                      <td className="px-6 py-4 text-sm text-slate-600">
+                      <td className="px-3 py-2 text-[11px] text-slate-600">
                         {employee.emp_code}
                       </td>
 
-                      <td className="px-6 py-4 text-sm text-slate-600">
+                      <td className="px-3 py-2 text-[11px] text-slate-600">
                         {employee.emp_dept}
                       </td>
                     </tr>
@@ -114,10 +118,11 @@ export default function Employees() {
               </table>
             </div>
 
-            {/* No Data */}
+            {/* NO DATA */}
+
             {employees.length === 0 && (
-              <div className="p-8 text-center">
-                <p className="text-sm text-slate-500">No employees found.</p>
+              <div className="p-5 text-center">
+                <p className="text-xs text-slate-500">No employees found.</p>
               </div>
             )}
           </div>

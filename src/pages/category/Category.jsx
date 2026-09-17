@@ -1,41 +1,95 @@
-import { useEffect, useState } from "react";
-import { Plus, Loader2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Pencil, Trash2, Save, X } from "lucide-react";
 
-import { getCategories, addCategory } from "../../services/categoryService";
+import {
+  getCategories,
+  addCategory,
+  getTypes,
+  addType,
+} from "../../services/categoryService";
+
+import { Button } from "../../components/common/Button";
+import { SearchBar } from "../../components/common/SearchBar";
+import { Dropdown } from "../../components/common/Dropdown";
 
 function Category() {
   const [categoryName, setCategoryName] = useState("");
   const [categories, setCategories] = useState([]);
+
+  const [rows, setRows] = useState([]);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Get all categories
+  const [formName, setFormName] = useState("");
+  const [formCategory, setFormCategory] = useState("");
+
+  const [search, setSearch] = useState("");
+  const [filterCategory, setFilterCategory] = useState("All");
+
+  const [editingId, setEditingId] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editCategory, setEditCategory] = useState("");
+
+  const [formError, setFormError] = useState("");
+  const [toast, setToast] = useState("");
+
+  // =========================
+  // GET CATEGORIES
+  // =========================
+
   const loadCategories = async () => {
     try {
-      setLoading(true);
-      setError("");
-
       const response = await getCategories();
-      console.log("API RESPONSE DATA:", response);
 
-      // Extract array safely from response.data or response
-      if (response && Array.isArray(response.data)) {
-        setCategories(response.data);
-      } else if (Array.isArray(response)) {
-        setCategories(response);
-      } else {
-        setCategories([]);
-      }
+      console.log("Categories:", response);
+
+      setCategories(response);
     } catch (error) {
       console.error("Get Categories Error:", error);
+
       setError(error.response?.data?.message || "Failed to load categories");
-    } finally {
-      setLoading(false);
     }
   };
 
-  // Add category
-  const handleSubmit = async (e) => {
+  // =========================
+  // GET TYPES
+  // =========================
+
+  const loadTypes = async () => {
+    try {
+      const response = await getTypes();
+
+      console.log("Types API Response:", response);
+
+      const typeData = response?.data || response;
+
+      if (Array.isArray(typeData)) {
+        const formattedTypes = typeData.map((type) => ({
+          id: type.TypeID,
+          name: type.TypeName,
+          categoryId: type.CategoryID,
+          category: type.CategoryName,
+        }));
+
+        setRows(formattedTypes);
+      } else {
+        setRows([]);
+      }
+    } catch (error) {
+      console.error("Get Types Error:", error);
+
+      setError(
+        error.response?.data?.message || "Failed to load sub categories",
+      );
+    }
+  };
+
+  // =========================
+  // ADD CATEGORY
+  // =========================
+
+  const handleCategorySubmit = async (e) => {
     e.preventDefault();
 
     if (!categoryName.trim()) {
@@ -48,145 +102,439 @@ function Category() {
       setError("");
 
       await addCategory(categoryName.trim());
+
       setCategoryName("");
 
-      // Reload category list
       await loadCategories();
+
+      showToast("Category added successfully.");
     } catch (error) {
       console.error("Add Category Error:", error);
+
       setError(error.response?.data?.message || "Failed to add category");
     } finally {
       setLoading(false);
     }
   };
 
-  // Load categories when page opens
+  // =========================
+  // ADD SUB CATEGORY / TYPE
+  // =========================
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    setFormError("");
+
+    if (!formName.trim()) {
+      setFormError("Sub Category Name is required.");
+      return;
+    }
+
+    if (!formCategory) {
+      setFormError("Please select Category.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      await addType(formName.trim(), formCategory);
+
+      setFormName("");
+      setFormCategory("");
+
+      await loadTypes();
+
+      showToast("Sub Category added successfully.");
+    } catch (error) {
+      console.error("Add Type Error:", error);
+
+      setFormError(
+        error.response?.data?.message || "Failed to add sub category",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // =========================
+  // LOAD DATA
+  // =========================
+
   useEffect(() => {
     loadCategories();
+    loadTypes();
   }, []);
 
+  // =========================
+  // TOAST
+  // =========================
+
+  const showToast = (message) => {
+    setToast(message);
+
+    setTimeout(() => {
+      setToast("");
+    }, 2200);
+  };
+
+  // =========================
+  // SEARCH + FILTER
+  // =========================
+
+  const filteredRows = useMemo(() => {
+    return rows.filter((row) => {
+      const searchMatch = row.name.toLowerCase().includes(search.toLowerCase());
+
+      const categoryMatch =
+        filterCategory === "All" || row.category === filterCategory;
+
+      return searchMatch && categoryMatch;
+    });
+  }, [rows, search, filterCategory]);
+
+  // =========================
+  // EDIT
+  // =========================
+
+  const startEdit = (row) => {
+    setEditingId(row.id);
+    setEditName(row.name);
+    setEditCategory(row.categoryId);
+  };
+
+  const saveEdit = (id) => {
+    if (!editName.trim()) {
+      showToast("Sub Category Name is required.");
+      return;
+    }
+
+    if (!editCategory) {
+      showToast("Please select Category.");
+      return;
+    }
+
+    setRows((prev) =>
+      prev.map((row) =>
+        row.id === id
+          ? {
+              ...row,
+              name: editName.trim(),
+              categoryId: editCategory,
+              category:
+                categories.find(
+                  (category) =>
+                    String(category.categoryId) === String(editCategory),
+                )?.categoryName || "",
+            }
+          : row,
+      ),
+    );
+
+    setEditingId(null);
+    setEditName("");
+    setEditCategory("");
+
+    showToast("Sub Category updated.");
+  };
+
+  // =========================
+  // DELETE
+  // =========================
+
+  const deleteRow = (id) => {
+    setRows((prev) => prev.filter((row) => row.id !== id));
+
+    showToast("Sub Category deleted.");
+  };
+
+  // =========================
+  // UI
+  // =========================
+
   return (
-    <div className="min-h-screen bg-slate-50 p-6">
-      {/* Page Title */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Category</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Add and manage asset categories
-        </p>
-      </div>
+    <div className="min-h-screen bg-slate-50 px-4 pt-0 pb-4">
+      <div className="w-full">
+        {/* PAGE HEADER */}
 
-      {/* Error */}
-      {error && (
-        <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-          {error}
+        <div className="mb-3 mt-0">
+          <h1 className="text-lg font-semibold text-slate-900">
+            Category Management
+          </h1>
         </div>
-      )}
 
-      {/* Add Category */}
-      <div className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold text-slate-800">
-          Add Category
-        </h2>
+        {/* =========================
+            ADD CATEGORY
+        ========================= */}
 
-        <form
-          onSubmit={handleSubmit}
-          className="flex flex-col gap-3 sm:flex-row"
-        >
-          <input
-            type="text"
-            value={categoryName}
-            onChange={(e) => {
-              setCategoryName(e.target.value);
-              setError("");
-            }}
-            placeholder="Enter category name"
-            disabled={loading}
-            className="flex-1 rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 disabled:bg-slate-100"
-          />
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex items-center justify-center gap-2 rounded-lg bg-sky-600 px-6 py-3 text-sm font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Adding...
-              </>
-            ) : (
-              <>
-                <Plus className="h-4 w-4" />
-                Add Category
-              </>
-            )}
-          </button>
-        </form>
-      </div>
-
-      {/* Category List */}
-      <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-          <h2 className="text-lg font-semibold text-slate-800">
-            Category List
+        <section className="mb-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+          <h2 className="mb-2 text-xs font-semibold text-slate-800">
+            Add Category
           </h2>
 
-          <span className="text-sm text-slate-500">
-            Total: {categories?.length || 0}
-          </span>
-        </div>
+          <form
+            onSubmit={handleCategorySubmit}
+            className="flex items-end gap-2"
+          >
+            <div className="flex-1">
+              <label className="mb-1 block text-[11px] font-medium text-slate-600">
+                Category Name
+              </label>
 
-        {/* Loading */}
-        {loading && categories?.length === 0 && (
-          <div className="px-5 py-8 text-center text-sm text-slate-500">
-            Loading categories...
+              <input
+                type="text"
+                value={categoryName}
+                onChange={(e) => {
+                  setCategoryName(e.target.value);
+                  setError("");
+                }}
+                placeholder="Enter category name"
+                disabled={loading}
+                className="h-8 w-full rounded-md border border-slate-300 px-2.5 text-xs outline-none focus:border-green-600 focus:ring-1 focus:ring-green-100"
+              />
+            </div>
+
+            <Button
+              type="submit"
+              size="sm"
+              disabled={loading}
+              className="h-8 rounded-md bg-green-600 px-3 text-xs hover:bg-green-700"
+            >
+              {loading ? "Saving..." : "Save"}
+            </Button>
+          </form>
+        </section>
+
+        {/* ERROR */}
+
+        {error && (
+          <div className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-[11px] text-red-600">
+            {error}
           </div>
         )}
 
-        {/* Empty */}
-        {!loading && categories?.length === 0 && (
-          <div className="px-5 py-8 text-center text-sm text-slate-500">
-            No categories found
-          </div>
-        )}
+        {/* =========================
+            ADD SUB CATEGORY
+        ========================= */}
 
-        {/* Table */}
-        {categories?.length > 0 && (
+        <section className="mb-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+          <h2 className="mb-2 text-xs font-semibold text-slate-800">
+            Add Sub Category
+          </h2>
+
+          <form onSubmit={handleSubmit}>
+            <div className="flex items-end gap-2">
+              {/* SUB CATEGORY NAME */}
+
+              <div className="flex-1">
+                <label className="mb-1 block text-[11px] font-medium text-slate-600">
+                  Sub Category Name
+                </label>
+
+                <input
+                  type="text"
+                  value={formName}
+                  onChange={(e) => {
+                    setFormName(e.target.value);
+                    setFormError("");
+                  }}
+                  placeholder="Enter Sub Category Name"
+                  disabled={loading}
+                  className="h-8 w-full rounded-md border border-slate-300 px-2.5 text-xs outline-none focus:border-green-600 focus:ring-1 focus:ring-green-100"
+                />
+              </div>
+
+              {/* CATEGORY */}
+
+              <div className="w-48">
+                <Dropdown
+                  categories={categories}
+                  value={formCategory}
+                  onChange={setFormCategory}
+                />
+              </div>
+
+              {/* ADD */}
+
+              <Button
+                type="submit"
+                size="sm"
+                disabled={loading}
+                className="h-8 rounded-md bg-green-600 px-3 text-xs hover:bg-green-700"
+              >
+                {loading ? "Adding..." : "Add"}
+              </Button>
+            </div>
+
+            {formError && (
+              <p className="mt-1 text-[11px] text-red-600">{formError}</p>
+            )}
+          </form>
+        </section>
+
+        {/* =========================
+            SEARCH + FILTER
+        ========================= */}
+
+        <section className="mb-3 flex items-center gap-2">
+          <div className="w-56">
+            <SearchBar
+              value={search}
+              onChange={setSearch}
+              placeholder="Search..."
+            />
+          </div>
+
+          <select
+            value={filterCategory}
+            onChange={(e) => setFilterCategory(e.target.value)}
+            className="h-8 w-36 rounded-md border border-slate-300 bg-white px-2 text-[11px] outline-none focus:border-green-600"
+          >
+            <option value="All">All Categories</option>
+
+            {categories.map((category) => (
+              <option key={category.categoryId} value={category.categoryName}>
+                {category.categoryName}
+              </option>
+            ))}
+          </select>
+        </section>
+
+        {/* =========================
+            TABLE
+        ========================= */}
+
+        <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
+            <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50">
-                  <th className="px-5 py-3 text-xs font-semibold uppercase text-slate-500">
-                    Category ID
+                  <th className="px-3 py-2 text-left text-[11px] font-semibold text-slate-600">
+                    ID
                   </th>
 
-                  <th className="px-5 py-3 text-xs font-semibold uppercase text-slate-500">
-                    Category Name
+                  <th className="px-3 py-2 text-left text-[11px] font-semibold text-slate-600">
+                    Sub Category
+                  </th>
+
+                  <th className="px-3 py-2 text-left text-[11px] font-semibold text-slate-600">
+                    Category
+                  </th>
+
+                  <th className="px-3 py-2 text-right text-[11px] font-semibold text-slate-600">
+                    Actions
                   </th>
                 </tr>
               </thead>
 
               <tbody>
-                {categories.map((category, index) => (
+                {filteredRows.map((row) => (
                   <tr
-                    key={category.CategoryID || index}
-                    className="border-b border-slate-100 last:border-0 hover:bg-slate-50"
+                    key={row.id}
+                    className="border-b border-slate-100 hover:bg-slate-50"
                   >
-                    {/* Exact Backend Keys Used Here */}
-                    <td className="px-5 py-4 text-sm font-medium text-slate-700">
-                      {category.CategoryID}
+                    <td className="px-3 py-2 text-[11px] text-slate-600">
+                      {row.id}
                     </td>
 
-                    <td className="px-5 py-4 text-sm text-slate-800">
-                      {category.CategoryName}
+                    <td className="px-3 py-2 text-xs text-slate-800">
+                      {editingId === row.id ? (
+                        <input
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          className="h-7 rounded border px-2 text-[11px]"
+                        />
+                      ) : (
+                        row.name
+                      )}
+                    </td>
+
+                    <td className="px-3 py-2">
+                      {editingId === row.id ? (
+                        <Dropdown
+                          categories={categories}
+                          value={editCategory}
+                          onChange={setEditCategory}
+                        />
+                      ) : (
+                        <span className="rounded-full bg-purple-100 px-2 py-1 text-[10px] font-medium text-purple-700">
+                          {row.category}
+                        </span>
+                      )}
+                    </td>
+
+                    <td className="px-3 py-2">
+                      <div className="flex justify-end gap-1">
+                        {editingId === row.id ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => saveEdit(row.id)}
+                              className="rounded bg-green-600 p-1.5 text-white"
+                            >
+                              <Save size={13} />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingId(null);
+                                setEditName("");
+                                setEditCategory("");
+                              }}
+                              className="rounded border border-slate-300 p-1.5"
+                            >
+                              <X size={13} />
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => startEdit(row)}
+                              className="rounded border border-slate-300 p-1.5 hover:bg-slate-100"
+                            >
+                              <Pencil size={13} />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => deleteRow(row.id)}
+                              className="rounded bg-red-50 p-1.5 text-red-600"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
+
+                {filteredRows.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan="4"
+                      className="px-3 py-5 text-center text-[11px] text-slate-500"
+                    >
+                      No sub category found.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
-        )}
+        </section>
       </div>
+
+      {/* TOAST */}
+
+      {toast && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 rounded-md bg-slate-900 px-4 py-2 text-[11px] text-white shadow-lg">
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

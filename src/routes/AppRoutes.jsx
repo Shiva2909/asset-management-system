@@ -11,8 +11,11 @@ import { Assets } from "../pages/assets/Assets";
 import { Allocations } from "../pages/allocations/Allocations";
 import { Bills } from "../pages/bills/Bills";
 import Category from "../pages/category/Category";
-import SubCategory from "../pages/subCategory/SubCategory";
+
 import Employees from "../pages/Employee/Employees";
+
+import AddMaintenance from "../pages/maintenance/AddMaintenance";
+import { ViewHistory } from "../pages/view-history/ViewHistory";
 
 export const AppRoutes = () => {
   const { isAuthenticated } = useAuth();
@@ -41,9 +44,11 @@ export const AppRoutes = () => {
           <Route path="/bills" element={<Bills />} />
 
           <Route path="/category" element={<Category />} />
-          <Route path="/subCategory" element={<SubCategory />} />
+          <Route path="/Employee" element={<Employees />} />
 
-          <Route path="/employees" element={<Employees />} />
+          <Route path="/maintenance" element={<AddMaintenance />} />
+          <Route path="/allocations/view-history" element={<ViewHistory />} />
+          <Route />
         </Route>
       </Route>
 
