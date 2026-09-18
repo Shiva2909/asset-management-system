@@ -47,8 +47,9 @@ export const AppRoutes = () => {
           <Route path="/Employee" element={<Employees />} />
 
           <Route path="/maintenance" element={<AddMaintenance />} />
-          <Route path="/allocations/view-history" element={<ViewHistory />} />
-          <Route />
+          
+          {/* 🚨 YAHAN CHANGE KIYA HAI :assetId laga kar */}
+          <Route path="/allocations/view-history/:assetId" element={<ViewHistory />} />
         </Route>
       </Route>
 

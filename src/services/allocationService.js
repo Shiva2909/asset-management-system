@@ -40,14 +40,10 @@ export const allocationService = {
   },
 
   // 4. Get Allocation History by Asset ID
-  async getAllocationHistory(assetId) {
-    try {
-      const response = await apiUrl.get(`/allocations/history/${assetId}`);
-
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching allocation history:", error);
-      throw error;
-    }
+  // Fetch asset history from backend
+  getAssetHistory: async (assetId) => {
+    // Apne API instance ka naam yahan lagana (jaise axios ya apiUrl)
+    const response = await apiUrl.get(`/allocations/history/${assetId}`);
+    return response.data;
   },
 };

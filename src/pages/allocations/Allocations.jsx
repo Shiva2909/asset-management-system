@@ -71,7 +71,7 @@ export const Allocations = () => {
         <AllocationTable
           allocations={allocations}
           onReturn={(allocation) => setReturnTarget(allocation)}
-          onViewHistory={(allocation) => navigate("/allocations/view-history")}
+          onViewHistory={(allocation) => navigate(`/allocations/view-history/${allocation.AssetID}`)}
         />
       )}
 
