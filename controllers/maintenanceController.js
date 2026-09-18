@@ -39,9 +39,9 @@ const getAssetMaintenanceHistory = async (req, res) => {
         const request = new sql.Request();
         request.input('AssetID', sql.Int, assetId);
 
-        // Fetch all maintenance records for this asset
+        // 🚨 FIX: Yahan SELECT ke baad AssetID add kar diya hai
         const query = `
-            SELECT MaintenanceID, MaintenanceDate, Cost, Description, ReceiptFilePath
+            SELECT MaintenanceID, AssetID, MaintenanceDate, Cost, Description, ReceiptFilePath
             FROM AssetMaintenance
             WHERE AssetID = @AssetID
             ORDER BY MaintenanceDate DESC
@@ -55,9 +55,9 @@ const getAssetMaintenanceHistory = async (req, res) => {
         res.status(200).json({
             success: true,
             assetId: assetId,
-            totalRepairs: totalRepairs, // Kitni baar repair hua
-            totalCost: totalCost,       // Total kharcha kitna hua
-            history: result.recordset   // Har repair ka poora bill aur detail
+            totalRepairs: totalRepairs, 
+            totalCost: totalCost,       
+            history: result.recordset   
         });
     } catch (error) {
         console.error('Fetch Maintenance History Error:', error);

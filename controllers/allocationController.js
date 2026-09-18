@@ -130,15 +130,16 @@ const returnAsset = async (req, res) => {
 const getAllocations = async (req, res) => {
     try {
         // Naya JOIN lagaya gaya hai Types aur Categories table ko fetch karne ke liye
+        
         const query = `
-            SELECT al.AllocationID, al.AssignedDate, al.ReturnDate, al.Remarks,
+            SELECT al.AllocationID, al.AssetID, al.AssignedDate, al.ReturnDate, al.Remarks,
                    a.AssetTag, a.AssetName, 
-                   t.TypeName, c.CategoryName, -- Added from new structure
+                   t.TypeName, c.CategoryName,
                    e.empid, e.emp_name, e.emp_dept
             FROM AssetAllocations al
             LEFT JOIN Assets a ON al.AssetID = a.AssetID
-            LEFT JOIN AssetTypes t ON a.TypeID = t.TypeID -- New JOIN
-            LEFT JOIN Categories c ON t.CategoryID = c.CategoryID -- New JOIN
+            LEFT JOIN AssetTypes t ON a.TypeID = t.TypeID 
+            LEFT JOIN Categories c ON t.CategoryID = c.CategoryID 
             INNER JOIN Employees e ON al.EmployeeID = e.id
             ORDER BY al.AssignedDate DESC
         `;
