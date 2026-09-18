@@ -14,11 +14,13 @@ export const ReturnAssetModal = ({
       isOpen={isOpen}
       onClose={onClose}
       onConfirm={() => {
-        onConfirm(allocation.id, allocation.assetTag);
+        // 🚨 Fix: 'id' ki jagah 'AllocationID' aur 'assetTag' ki jagah 'AssetTag'
+        onConfirm(allocation.AllocationID, allocation.AssetTag);
         onClose();
       }}
       title="Return Allocated Device"
-      message={`Confirm return of ${allocation.assetName} (${allocation.assetTag}) from ${allocation.employeeName}? Device status will immediately revert to 'Available'.`}
+      // 🚨 Fix: Saare variables ko exact backend keys se match kar diya
+      message={`Confirm return of ${allocation.AssetName} (${allocation.AssetTag}) from ${allocation.emp_name}? Device status will immediately revert to 'Available'.`}
       confirmLabel="Confirm Return"
     />
   );

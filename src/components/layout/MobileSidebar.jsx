@@ -28,7 +28,7 @@ export const MobileSidebar = ({ isOpen, onClose }) => {
               A
             </div>
             <span className="text-sm font-bold uppercase tracking-wider text-white">
-              EquipTrack
+              Unios AMS
             </span>
           </div>
           <button

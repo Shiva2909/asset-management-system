@@ -1,5 +1,3 @@
-// hooks/useAssets.js
-
 import { useState, useEffect, useCallback } from "react";
 
 import {
@@ -9,24 +7,31 @@ import {
   deleteAsset as apiDeleteAsset,
 } from "../services/assetService";
 
-export const useAssets = () => {
+export const useAssets = (pageSize = 10) => {
   // ==========================================
-  // Filter States
+  // FILTER STATES
   // ==========================================
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
   // ==========================================
-  // Data & Status States
+  // PAGINATION STATES
+  // ==========================================
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  // ==========================================
+  // DATA & STATUS STATES
   // ==========================================
   const [assets, setAssets] = useState([]);
   const [totalItems, setTotalItems] = useState(0);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   // ==========================================
-  // Fetch Assets
+  // FETCH ASSETS
   // ==========================================
   const fetchAssets = useCallback(async () => {
     setLoading(true);
@@ -37,66 +42,69 @@ export const useAssets = () => {
         searchTerm,
         categoryFilter,
         statusFilter,
+        page,
+        pageSize,
       });
 
       console.log("FULL ASSETS RESPONSE:", response);
 
-      /*
-        Backend response:
-
-        {
-          success: true,
-          currentPage: 1,
-          totalPages: 1,
-          totalRecords: 5,
-          count: 5,
-          data: [
-            {
-              AssetID: 5,
-              AssetTag: "AST102",
-              AssetName: "hp",
-              VendorName: "hppro",
-              PurchaseDate: "...",
-              Price: 700000,
-              WarrantyExpiryDate: "...",
-              Status: "Available",
-              CategoryID: 1,
-              CategoryName: "Laptop"
-            }
-          ]
-        }
-      */
-
+      // ==========================================
+      // ASSETS LIST
+      // ==========================================
       const list = Array.isArray(response) ? response : response?.data || [];
 
       console.log("ACTUAL ASSETS LIST:", list);
 
       setAssets(list);
 
-      // API mein totalRecords aa raha hai
+      // ==========================================
+      // TOTAL ITEMS
+      // ==========================================
       setTotalItems(
-        response?.totalRecords ||
-          response?.totalCount ||
-          response?.total ||
+        response?.totalRecords ??
+          response?.totalCount ??
+          response?.total ??
+          response?.count ??
           list.length,
+      );
+
+      // ==========================================
+      // TOTAL PAGES
+      // ==========================================
+      setTotalPages(
+        response?.totalPages ??
+          Math.max(
+            1,
+            Math.ceil(
+              (response?.totalRecords ??
+                response?.totalCount ??
+                response?.total ??
+                response?.count ??
+                list.length) / pageSize,
+            ),
+          ),
       );
     } catch (err) {
       console.error("Failed to fetch assets:", err);
 
       const errorMessage =
-        err.response?.data?.message || err.message || "Failed to fetch assets";
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        "Failed to fetch assets";
 
       setError(errorMessage);
 
       setAssets([]);
       setTotalItems(0);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, categoryFilter, statusFilter]);
+  }, [searchTerm, categoryFilter, statusFilter, page, pageSize]);
 
   // ==========================================
-  // Fetch on Search / Filter Change
+  // FETCH ON SEARCH / FILTER / PAGE CHANGE
   // ==========================================
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -107,24 +115,45 @@ export const useAssets = () => {
   }, [fetchAssets]);
 
   // ==========================================
-  // Search Handler
+  // SEARCH HANDLER
   // ==========================================
   const handleSearchChange = (value) => {
     setSearchTerm(value);
+    setPage(1);
   };
 
   // ==========================================
-  // Category Handler
+  // CATEGORY HANDLER
   // ==========================================
   const handleCategoryChange = (categoryID) => {
     setCategoryFilter(categoryID);
+    setPage(1);
   };
 
   // ==========================================
-  // Status Handler
+  // STATUS HANDLER
   // ==========================================
   const handleStatusChange = (status) => {
     setStatusFilter(status);
+    setPage(1);
+  };
+
+  // ==========================================
+  // NEXT PAGE
+  // ==========================================
+  const nextPage = () => {
+    if (page < totalPages) {
+      setPage((currentPage) => currentPage + 1);
+    }
+  };
+
+  // ==========================================
+  // PREVIOUS PAGE
+  // ==========================================
+  const prevPage = () => {
+    if (page > 1) {
+      setPage((currentPage) => currentPage - 1);
+    }
   };
 
   // ==========================================
@@ -139,7 +168,6 @@ export const useAssets = () => {
 
       console.log("ADD ASSET RESPONSE:", response);
 
-      // Add ke baad table refresh
       await fetchAssets();
 
       return response;
@@ -147,7 +175,10 @@ export const useAssets = () => {
       console.error("Failed to add asset:", err);
 
       const errorMessage =
-        err.response?.data?.message || err.message || "Failed to add asset";
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        "Failed to add asset";
 
       setError(errorMessage);
 
@@ -176,7 +207,10 @@ export const useAssets = () => {
       console.error("Failed to update asset:", err);
 
       const errorMessage =
-        err.response?.data?.message || err.message || "Failed to update asset";
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        "Failed to update asset";
 
       setError(errorMessage);
 
@@ -205,7 +239,10 @@ export const useAssets = () => {
       console.error("Failed to delete asset:", err);
 
       const errorMessage =
-        err.response?.data?.message || err.message || "Failed to delete asset";
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        "Failed to delete asset";
 
       setError(errorMessage);
 
@@ -222,8 +259,16 @@ export const useAssets = () => {
     // Assets
     assets,
     totalItems,
+
+    // Loading & Error
     loading,
     error,
+
+    // Pagination
+    page,
+    totalPages,
+    nextPage,
+    prevPage,
 
     // Refresh
     refetch: fetchAssets,
@@ -233,7 +278,7 @@ export const useAssets = () => {
     categoryFilter,
     statusFilter,
 
-    // Filter handlers
+    // Filter Handlers
     onSearchChange: handleSearchChange,
     onCategoryChange: handleCategoryChange,
     onStatusChange: handleStatusChange,

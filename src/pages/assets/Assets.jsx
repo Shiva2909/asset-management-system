@@ -1,103 +1,213 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+
 import { useAssets } from "../../hooks/useAssets";
+
 import { PageHeader } from "../../components/layout/PageHeader";
 import { AssetFilters } from "../../components/assets/AssetFilters";
 import { AssetTable } from "../../components/assets/AssetTable";
 import { AssetModal } from "../../components/assets/AssetModal";
+
 import { ConfirmDialog } from "../../components/common/ConfirmDialog";
 import { Button } from "../../components/common/Button";
 import { Loader } from "../../components/common/Loader";
+
 import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 
+import { getCategories, getTypes } from "../../services/categoryService";
+
 export const Assets = () => {
-  // Hook se data, handlers aur pagination states nikaalein
+  // ==========================================
+  // ASSET DATA
+  // ==========================================
+
   const {
     assets,
     loading,
     error,
+
     searchTerm,
     categoryFilter,
     statusFilter,
+
     onSearchChange,
     onCategoryChange,
     onStatusChange,
+
     page,
     totalPages,
     totalItems,
+
     nextPage,
     prevPage,
+
     addAsset,
     editAsset,
     removeAsset,
-  } = useAssets(10); // 10 items per page
+  } = useAssets(10);
+
+  // ==========================================
+  // CATEGORY + TYPE DATA
+  // ==========================================
+
+  const [categories, setCategories] = useState([]);
+  const [types, setTypes] = useState([]);
+
+  const [dropdownLoading, setDropdownLoading] = useState(false);
+
+  // ==========================================
+  // MODAL
+  // ==========================================
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState(null);
+
+  // ==========================================
+  // DELETE
+  // ==========================================
+
   const [deleteTargetTag, setDeleteTargetTag] = useState(null);
+
+  // ==========================================
+  // GET CATEGORIES + TYPES
+  // ==========================================
+
+  useEffect(() => {
+    const fetchDropdowns = async () => {
+      try {
+        setDropdownLoading(true);
+
+        const [categoryResponse, typeResponse] = await Promise.all([
+          getCategories(),
+          getTypes(),
+        ]);
+
+        console.log("Categories:", categoryResponse);
+
+        console.log("Types:", typeResponse);
+
+        // Categories
+        setCategories(Array.isArray(categoryResponse) ? categoryResponse : []);
+
+        // Types
+        setTypes(
+          typeResponse?.success && Array.isArray(typeResponse.data)
+            ? typeResponse.data
+            : [],
+        );
+      } catch (err) {
+        console.error("Dropdown API Error:", err);
+
+        setCategories([]);
+        setTypes([]);
+      } finally {
+        setDropdownLoading(false);
+      }
+    };
+
+    fetchDropdowns();
+  }, []);
+
+  // ==========================================
+  // OPEN ADD ASSET
+  // ==========================================
+
+  const handleOpenAdd = () => {
+    setEditingAsset(null);
+    setIsModalOpen(true);
+  };
+
+  // ==========================================
+  // OPEN EDIT ASSET
+  // ==========================================
 
   const handleOpenEdit = (asset) => {
     setEditingAsset(asset);
     setIsModalOpen(true);
   };
 
+  // ==========================================
+  // CLOSE MODAL
+  // ==========================================
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingAsset(null);
   };
 
-  const handleFormSubmit = async (data) => {
-    if (editingAsset) {
-      await editAsset?.(editingAsset.assetTag, data);
-    } else {
-      await addAsset?.(data);
+  // ==========================================
+  // SUBMIT ASSET
+  // ==========================================
+
+  const handleFormSubmit = async (formData, assetId) => {
+    try {
+      if (assetId) {
+        await editAsset?.(assetId, formData);
+      } else {
+        await addAsset?.(formData);
+      }
+
+      handleCloseModal();
+    } catch (err) {
+      console.error("Asset Save Error:", err);
     }
-    handleCloseModal();
   };
 
+  // ==========================================
+  // UI
+  // ==========================================
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
+      {/* PAGE HEADER */}
+
       <PageHeader
         title="Asset Inventory"
         subtitle="Manage hardware catalogs, purchases, and operational status"
         actions={
-          <Button onClick={() => setIsModalOpen(true)}>
-            <Plus className="w-4 h-4" /> Add Asset
+          <Button size="sm" onClick={handleOpenAdd}>
+            <Plus className="h-4 w-4" />
+            Add Asset
           </Button>
         }
       />
 
-      {/* Backend Filters */}
+      {/* FILTERS */}
+
       <AssetFilters
         searchTerm={searchTerm}
         onSearchChange={(e) => onSearchChange(e.target.value)}
         categoryFilter={categoryFilter}
-        onCategoryChange={(val) => onCategoryChange(val)}
+        onCategoryChange={(value) => onCategoryChange(value)}
         statusFilter={statusFilter}
-        onStatusChange={(val) => onStatusChange(val)}
+        onStatusChange={(value) => onStatusChange(value)}
+        categories={categories}
       />
 
-      {/* Error Alert */}
+      {/* ERROR */}
+
       {error && (
-        <div className="p-4 bg-red-50 text-red-700 rounded-xl border border-red-200 text-sm">
-          {error}
+        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+          <p className="text-xs text-red-700">{error}</p>
         </div>
       )}
 
-      {/* Table & Loading State */}
+      {/* TABLE */}
+
       {loading ? (
         <Loader message="Loading hardware repository..." />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           <AssetTable
             assets={assets}
             onEdit={handleOpenEdit}
             onDelete={(tag) => setDeleteTargetTag(tag)}
           />
 
-          {/* Pagination Controls */}
+          {/* PAGINATION */}
+
           {totalPages > 1 && (
-            <div className="flex items-center justify-between bg-white px-4 py-3 rounded-xl border border-slate-200">
-              <span className="text-sm text-slate-500">
+            <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2">
+              <span className="text-xs text-slate-500">
                 Page{" "}
                 <span className="font-semibold text-slate-800">{page}</span> of{" "}
                 <span className="font-semibold text-slate-800">
@@ -108,20 +218,25 @@ export const Assets = () => {
 
               <div className="flex items-center gap-2">
                 <Button
+                  type="button"
                   variant="secondary"
                   size="sm"
                   onClick={prevPage}
                   disabled={page <= 1}
                 >
-                  <ChevronLeft className="w-4 h-4 mr-1" /> Previous
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                  Previous
                 </Button>
+
                 <Button
+                  type="button"
                   variant="secondary"
                   size="sm"
                   onClick={nextPage}
                   disabled={page >= totalPages}
                 >
-                  Next <ChevronRight className="w-4 h-4 ml-1" />
+                  Next
+                  <ChevronRight className="h-3.5 w-3.5" />
                 </Button>
               </div>
             </div>
@@ -129,21 +244,29 @@ export const Assets = () => {
         </div>
       )}
 
-      {/* Add / Edit Modal */}
+      {/* ADD / EDIT ASSET MODAL */}
+
       <AssetModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onSubmit={handleFormSubmit}
-        initialValues={editingAsset}
+        assetToEdit={editingAsset}
+        types={types}
       />
 
-      {/* Delete Confirmation */}
+      {/* DELETE CONFIRMATION */}
+
       <ConfirmDialog
         isOpen={!!deleteTargetTag}
         onClose={() => setDeleteTargetTag(null)}
         onConfirm={async () => {
-          await removeAsset?.(deleteTargetTag);
-          setDeleteTargetTag(null);
+          try {
+            await removeAsset?.(deleteTargetTag);
+
+            setDeleteTargetTag(null);
+          } catch (err) {
+            console.error("Delete Asset Error:", err);
+          }
         }}
         title="Confirm Asset Deletion"
         message={`Are you certain you wish to delete asset ${deleteTargetTag}? This record will be permanently detached.`}

@@ -2,7 +2,6 @@ import React from "react";
 import { SearchBar } from "../common/SearchBar";
 import { Select } from "../common/Select";
 import { ASSET_STATUS } from "../../utils/constants";
-import { useCategories } from "../../hooks/useCategories";
 
 export const AssetFilters = ({
   searchTerm,
@@ -11,17 +10,12 @@ export const AssetFilters = ({
   onCategoryChange,
   statusFilter,
   onStatusChange,
+  categories = [],
 }) => {
-  // Categories API se fetch hongi
-  const {
-    categories,
-    loading: loadingCats,
-    error: categoryError,
-  } = useCategories();
+  // ==============================
+  // STATUS OPTIONS
+  // ==============================
 
-  // -----------------------------
-  // Status Options
-  // -----------------------------
   const statusOptions = [
     {
       label: "All Statuses",
@@ -41,47 +35,39 @@ export const AssetFilters = ({
     },
   ];
 
-  // -----------------------------
-  // Category Options
-  // API Response:
-  //
-  // {
-  //   CategoryID: 10,
-  //   CategoryName: "bike"
-  // }
-  //
-  // UI me CategoryName dikhega
-  // Backend ko CategoryID milegi
-  // -----------------------------
+  // ==============================
+  // CATEGORY OPTIONS
+  // ==============================
 
   const categoryOptions = [
     {
-      label: loadingCats ? "Loading categories..." : "All Categories",
+      label: "All Categories",
       value: "",
     },
 
-    ...(categories || []).map((category) => ({
-      key: category.CategoryID,
-      label: category.CategoryName,
-      value: category.CategoryID,
+    ...categories.map((category) => ({
+      key: category.categoryId,
+      label: category.categoryName,
+      value: String(category.categoryId),
     })),
   ];
 
-  // Agar API error aaye
-  if (categoryError) {
-    console.error("Category API Error:", categoryError);
-  }
+  // ==============================
+  // UI
+  // ==============================
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-white p-4 rounded-xl border border-slate-200">
-      {/* Search */}
+    <div className="grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-white p-3 text-[11px] sm:grid-cols-3">
+      {/* SEARCH */}
+
       <SearchBar
         value={searchTerm}
         onChange={onSearchChange}
         placeholder="Search by name or asset tag..."
       />
 
-      {/* Category Filter */}
+      {/* CATEGORY */}
+
       <Select
         placeholder="Filter by Category"
         options={categoryOptions}
@@ -95,7 +81,8 @@ export const AssetFilters = ({
         }}
       />
 
-      {/* Status Filter */}
+      {/* STATUS */}
+
       <Select
         placeholder="Filter by Status"
         options={statusOptions}

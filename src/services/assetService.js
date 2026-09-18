@@ -1,83 +1,58 @@
-// services/assetService.js
 import { apiUrl } from "./api";
 
 // ==========================================
-// 1. GET Requests (Fetch Data)
+// GET ALL ASSETS
+// GET /api/assets
 // ==========================================
 
-// Get All Assets (Filters only, Pagination removed)
-export const getAssets = async ({
-  searchTerm = "",
-  categoryFilter = "",
-  statusFilter = "",
-} = {}) => {
-  const params = {
-    ...(searchTerm.trim() && {
-      search: searchTerm.trim(),
-    }),
-
-    ...(categoryFilter && {
-      categoryName: categoryFilter,
-    }),
-
-    ...(statusFilter && {
-      status: statusFilter,
-    }),
-  };
-
+export const getAssets = async (params = {}) => {
   const response = await apiUrl.get("/assets", {
     params,
   });
 
-  console.log("GET ASSETS API:", response.data);
+  return response.data;
+};
+
+// ==========================================
+// GET ASSET BY ID
+// GET /api/assets/:id
+// ==========================================
+
+export const getAssetById = async (id) => {
+  const response = await apiUrl.get(`/assets/${id}`);
 
   return response.data;
 };
+
 // ==========================================
-// 2. POST Request (Create Data)
+// ADD ASSET
+// POST /api/assets
 // ==========================================
 
-// Add New Asset
 export const addAsset = async (assetData) => {
-  const response = await apiUrl.post("/assets", {
-    assetTag: assetData.assetTag,
-    assetName: assetData.assetName,
-    categoryID: assetData.categoryID,
-    vendorName: assetData.vendorName,
-    purchaseDate: assetData.purchaseDate,
-    price: Number(assetData.price) || 0,
-    warrantyExpiryDate: assetData.warrantyExpiryDate,
-    status: assetData.status,
-  });
+  const response = await apiUrl.post("/assets", assetData);
 
   return response.data;
 };
 
 // ==========================================
-// 3. PUT Request (Update Data)
+// UPDATE ASSET
+// PUT /api/assets/:id
 // ==========================================
 
-// Update Existing Asset by Asset Tag
-export const updateAsset = async (assetTag, assetData) => {
-  const response = await apiUrl.put(`/assets/${assetTag}`, {
-    assetName: assetData.assetName,
-    categoryID: assetData.categoryID,
-    vendorName: assetData.vendorName,
-    purchaseDate: assetData.purchaseDate,
-    price: Number(assetData.price) || 0,
-    warrantyExpiryDate: assetData.warrantyExpiryDate,
-    status: assetData.status,
-  });
+export const updateAsset = async (id, assetData) => {
+  const response = await apiUrl.put(`/assets/${id}`, assetData);
 
   return response.data;
 };
 
 // ==========================================
-// 4. DELETE Request (Remove Data)
+// DELETE ASSET
+// DELETE /api/assets/:id
 // ==========================================
 
-// Delete Asset by Asset Tag
-export const deleteAsset = async (assetTag) => {
-  const response = await apiUrl.delete(`/assets/${assetID}`);
+export const deleteAsset = async (AssetID) => {
+  const response = await apiUrl.delete(`/assets/${AssetID}`);
+
   return response.data;
 };

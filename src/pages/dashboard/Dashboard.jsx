@@ -1,30 +1,64 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAssets } from "../../hooks/useAssets";
 import { useAllocations } from "../../hooks/useAllocations";
+import { useCategories } from "../../hooks/useCategories"; 
+import { getEmployees } from "../../services/employeeService"; 
 import { DashboardStats } from "../../components/dashboard/DashboardStats";
 import { QuickAction } from "../../components/dashboard/QuickAction";
 import { PageHeader } from "../../components/layout/PageHeader";
 import { AssetModal } from "../../components/assets/AssetModal";
 import { AllocationModal } from "../../components/allocations/AllocationModal";
-import { ASSET_STATUS } from "../../utils/constants";
 import { Plus, Share2 } from "lucide-react";
 
 export const Dashboard = () => {
   const { assets, addAsset } = useAssets();
   const { assignAsset } = useAllocations();
+  const { categories } = useCategories(); 
+  
   const [isAssetModalOpen, setIsAssetModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
 
-  const availableAssets = assets.filter(
-    (a) => a.status === ASSET_STATUS.AVAILABLE,
-  );
+  const [employeeCount, setEmployeeCount] = useState(0);
 
+  useEffect(() => {
+    const fetchEmployeeData = async () => {
+      try {
+        const response = await getEmployees();
+        if (response && response.success) {
+          setEmployeeCount(response.data?.length || 0);
+        }
+      } catch (err) {
+        console.error("Dashboard Employee Fetch Error:", err);
+      }
+    };
+    fetchEmployeeData();
+  }, []);
+
+  const getAssetCount = (statusName) => {
+    return assets.filter((a) => {
+      const s = String(a.status || a.Status || "").toLowerCase().trim();
+      return s === statusName.toLowerCase();
+    }).length;
+  };
+
+  const availableAssets = assets.filter((a) => {
+    const s = String(a.status || a.Status || "").toLowerCase().trim();
+    return s === "available";
+  });
+
+  // 🚨 Ye variables zaroori hain stats calculate karne ke liye
+  const totalAssets = assets.length || 0;
+  const availableCount = getAssetCount("available");
+  const assignedCount = getAssetCount("assigned");
+
+  // 🚨 SMART FIX: Jo Available aur Assigned nahi hai, wo Maintenance mein hai
   const stats = {
-    total: assets.length,
-    available: availableAssets.length,
-    assigned: assets.filter((a) => a.status === ASSET_STATUS.ASSIGNED).length,
-    maintenance: assets.filter((a) => a.status === ASSET_STATUS.MAINTENANCE)
-      .length,
+    total: totalAssets,
+    available: availableCount,
+    assigned: assignedCount,
+    maintenance: totalAssets - (availableCount + assignedCount), 
+    categories: categories?.length || 0, 
+    employees: employeeCount, 
   };
 
   return (
@@ -66,3 +100,5 @@ export const Dashboard = () => {
     </div>
   );
 };
+
+export default Dashboard;
