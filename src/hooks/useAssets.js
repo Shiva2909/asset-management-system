@@ -1,19 +1,24 @@
 import { useState, useEffect, useCallback } from "react";
+import { useDebounce } from "./useDebounce";
 
 import {
+  getAssets1,
   getAssets,
   addAsset as apiAddAsset,
   updateAsset as apiUpdateAsset,
   deleteAsset as apiDeleteAsset,
 } from "../services/assetService";
 
-export const useAssets = (pageSize = 10) => {
+export const useAssets = (pageSize = 10, params = {}) => {
   // ==========================================
   // FILTER STATES
   // ==========================================
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+
+  // SearchTerm kosam fast debounce (150ms)
+  const debouncedSearchTerm = useDebounce(searchTerm, 150);
 
   // ==========================================
   // PAGINATION STATES
@@ -27,7 +32,7 @@ export const useAssets = (pageSize = 10) => {
   const [assets, setAssets] = useState([]);
   const [totalItems, setTotalItems] = useState(0);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // ==========================================
@@ -38,12 +43,13 @@ export const useAssets = (pageSize = 10) => {
     setError(null);
 
     try {
-      const response = await getAssets({
-        searchTerm,
+      const response = await getAssets1({
+        searchTerm: debouncedSearchTerm,
         categoryFilter,
         statusFilter,
         page,
         pageSize,
+        ...params,
       });
 
       console.log("FULL ASSETS RESPONSE:", response);
@@ -101,17 +107,20 @@ export const useAssets = (pageSize = 10) => {
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, categoryFilter, statusFilter, page, pageSize]);
+  }, [
+    debouncedSearchTerm,
+    categoryFilter,
+    statusFilter,
+    page,
+    pageSize,
+    JSON.stringify(params),
+  ]);
 
   // ==========================================
   // FETCH ON SEARCH / FILTER / PAGE CHANGE
   // ==========================================
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchAssets();
-    }, 400);
-
-    return () => clearTimeout(timer);
+    fetchAssets();
   }, [fetchAssets]);
 
   // ==========================================
@@ -125,8 +134,11 @@ export const useAssets = (pageSize = 10) => {
   // ==========================================
   // CATEGORY HANDLER
   // ==========================================
+
   const handleCategoryChange = (categoryID) => {
-    setCategoryFilter(categoryID);
+    console.log("Selected Category ID:", categoryID);
+
+    setCategoryFilter(String(categoryID ?? ""));
     setPage(1);
   };
 
@@ -289,3 +301,5 @@ export const useAssets = (pageSize = 10) => {
     removeAsset,
   };
 };
+
+export default useAssets;

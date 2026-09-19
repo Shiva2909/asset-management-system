@@ -10,31 +10,36 @@ export const AllocationRow = ({ allocation, onReturn, onViewHistory }) => {
 
   return (
     <tr className="hover:bg-slate-50/60 transition-colors">
+      {/* S.No. - Automatic serial number */}
+      <td className="py-3.5 px-4 font-mono text-xs font-semibold text-slate-600">
+        {allocation.sno}
+      </td>
+
+      {/* Fix 2: AssetTag */}
       <td className="py-3.5 px-4 font-mono text-xs font-semibold text-sky-600">
-        {/* Fix 2: AssetTag */}
         {allocation.AssetTag}
       </td>
 
+      {/* Fix 3: AssetName */}
       <td className="py-3.5 px-4 font-medium text-slate-800">
-        {/* Fix 3: AssetName */}
         {allocation.AssetName}
       </td>
 
+      {/* Fix 4: emp_name and empid */}
       <td className="py-3.5 px-4 font-medium text-slate-700">
-        {/* Fix 4: emp_name and empid */}
         {allocation.emp_name} <br />
         <span className="text-xs text-slate-400">({allocation.empid})</span>
       </td>
 
+      {/* Fix 5: AssignedDate */}
       <td className="py-3.5 px-4 text-slate-600">
-        {/* Fix 5: AssignedDate */}
         {formatDate(allocation.AssignedDate)}
       </td>
 
+      {/* Fix 6: ReturnDate */}
       <td className="py-3.5 px-4 text-slate-600">
         {isReturned ? (
           <Badge variant="success">
-            {/* Fix 6: ReturnDate */}
             Returned: {formatDate(allocation.ReturnDate)}
           </Badge>
         ) : (
@@ -42,8 +47,8 @@ export const AllocationRow = ({ allocation, onReturn, onViewHistory }) => {
         )}
       </td>
 
+      {/* Fix 7: Remarks */}
       <td className="py-3.5 px-4 text-xs italic text-slate-500">
-        {/* Fix 7: Remarks */}
         {allocation.Remarks || "—"}
       </td>
 

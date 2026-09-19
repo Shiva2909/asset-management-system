@@ -40,6 +40,7 @@ export const Assets = () => {
     nextPage,
     prevPage,
 
+    refetch,
     addAsset,
     editAsset,
     removeAsset,
@@ -82,7 +83,6 @@ export const Assets = () => {
         ]);
 
         console.log("Categories:", categoryResponse);
-
         console.log("Types:", typeResponse);
 
         // Categories
@@ -157,7 +157,7 @@ export const Assets = () => {
   // ==========================================
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 -mt-4 text-1xl">
       {/* PAGE HEADER */}
 
       <PageHeader
@@ -175,11 +175,11 @@ export const Assets = () => {
 
       <AssetFilters
         searchTerm={searchTerm}
-        onSearchChange={(e) => onSearchChange(e.target.value)}
+        onSearchChange={onSearchChange}
         categoryFilter={categoryFilter}
-        onCategoryChange={(value) => onCategoryChange(value)}
+        onCategoryChange={onCategoryChange}
         statusFilter={statusFilter}
-        onStatusChange={(value) => onStatusChange(value)}
+        onStatusChange={onStatusChange}
         categories={categories}
       />
 
@@ -262,7 +262,6 @@ export const Assets = () => {
         onConfirm={async () => {
           try {
             await removeAsset?.(deleteTargetTag);
-
             setDeleteTargetTag(null);
           } catch (err) {
             console.error("Delete Asset Error:", err);
@@ -276,3 +275,5 @@ export const Assets = () => {
     </div>
   );
 };
+
+export default Assets;

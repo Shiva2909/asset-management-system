@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Pencil, Trash2, Save, X } from "lucide-react";
+import { Pencil, Trash2, Save, X, FolderTree } from "lucide-react";
 
 import {
   getCategories,
@@ -11,6 +11,7 @@ import {
 import { Button } from "../../components/common/Button";
 import { SearchBar } from "../../components/common/SearchBar";
 import { Dropdown } from "../../components/common/Dropdown";
+import { Pagination } from "../../components/common/Pagination";
 
 function Category() {
   const [categoryName, setCategoryName] = useState("");
@@ -33,6 +34,15 @@ function Category() {
 
   const [formError, setFormError] = useState("");
   const [toast, setToast] = useState("");
+
+  // =========================
+  // PAGINATION
+  // =========================
+
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const pageSize = 10;
+  const totalPages = 10;
 
   // =========================
   // GET CATEGORIES
@@ -195,6 +205,14 @@ function Category() {
   }, [rows, search, filterCategory]);
 
   // =========================
+  // PAGINATED ROWS
+  // =========================
+
+  const startIndex = (currentPage - 1) * pageSize;
+
+  const paginatedRows = filteredRows.slice(startIndex, startIndex + pageSize);
+
+  // =========================
   // EDIT
   // =========================
 
@@ -254,14 +272,25 @@ function Category() {
   // =========================
 
   return (
-    <div className="min-h-screen bg-slate-50 px-4 pt-0 pb-4">
-      <div className="w-full">
+    <div className="min-h-screen bg-slate-50 p-3 sm:p-5">
+      <div className="mx-auto w-full max-w-6xl space-y-4">
         {/* PAGE HEADER */}
+        <div className="-mt-8 sm:-mt-10">
+          <div className="flex items-center gap-2">
+            <div className="rounded-lg bg-blue-100 p-1.5 text-blue-700">
+              <FolderTree size={18} />
+            </div>
 
-        <div className="mb-3 mt-0">
-          <h1 className="text-lg font-semibold text-slate-900">
-            Category Management
-          </h1>
+            <div>
+              <h1 className="text-lg font-bold text-slate-800 sm:text-xl">
+                Category Management
+              </h1>
+
+              <p className="text-[11px] text-slate-500">
+                Manage categories and sub categories
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* =========================
@@ -269,7 +298,7 @@ function Category() {
         ========================= */}
 
         <section className="mb-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
-          <h2 className="mb-2 text-xs font-semibold text-slate-800">
+          <h2 className="mb-2 text-xs font-bold text-slate-800">
             Add Category
           </h2>
 
@@ -319,7 +348,7 @@ function Category() {
         ========================= */}
 
         <section className="mb-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
-          <h2 className="mb-2 text-xs font-semibold text-slate-800">
+          <h2 className="mb-2 text-xs font-bold text-slate-800">
             Add Sub Category
           </h2>
 
@@ -347,13 +376,30 @@ function Category() {
 
               {/* CATEGORY */}
 
-              <div className="w-48">
+              {/* <div className="w-48">
                 <Dropdown
                   categories={categories}
                   value={formCategory}
                   onChange={setFormCategory}
                 />
-              </div>
+              </div> */}
+
+              <select
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                className="h-8 w-36 rounded-md border border-slate-300 bg-white px-2 text-[11px] outline-none focus:border-green-600"
+              >
+                <option value="All">All Categories</option>
+
+                {categories.map((category) => (
+                  <option
+                    key={category.categoryId}
+                    value={category.categoryName}
+                  >
+                    {category.categoryName}
+                  </option>
+                ))}
+              </select>
 
               {/* ADD */}
 
@@ -410,8 +456,9 @@ function Category() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50">
+                  {/* S.No. */}
                   <th className="px-3 py-2 text-left text-[11px] font-semibold text-slate-600">
-                    ID
+                    S.No.
                   </th>
 
                   <th className="px-3 py-2 text-left text-[11px] font-semibold text-slate-600">
@@ -429,13 +476,14 @@ function Category() {
               </thead>
 
               <tbody>
-                {filteredRows.map((row) => (
+                {paginatedRows.map((row, index) => (
                   <tr
                     key={row.id}
                     className="border-b border-slate-100 hover:bg-slate-50"
                   >
+                    {/* Automatic S.No. */}
                     <td className="px-3 py-2 text-[11px] text-slate-600">
-                      {row.id}
+                      {startIndex + index + 1}
                     </td>
 
                     <td className="px-3 py-2 text-xs text-slate-800">
@@ -526,6 +574,14 @@ function Category() {
             </table>
           </div>
         </section>
+
+        {/* REUSABLE PAGINATION */}
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={10}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {/* TOAST */}

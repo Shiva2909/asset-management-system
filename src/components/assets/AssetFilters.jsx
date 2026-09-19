@@ -46,18 +46,17 @@ export const AssetFilters = ({
     },
 
     ...categories.map((category) => ({
-      key: category.categoryId,
-      label: category.categoryName,
-      value: String(category.categoryId),
+      key: category.categoryId ?? category.CategoryID,
+      label: category.categoryName ?? category.CategoryName,
+      value: String(category.categoryId ?? category.CategoryID),
     })),
   ];
-
   // ==============================
   // UI
   // ==============================
 
   return (
-    <div className="grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-white p-3 text-[11px] sm:grid-cols-3">
+    <div className="grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-white p-3 text-sm sm:grid-cols-3">
       {/* SEARCH */}
 
       <SearchBar
@@ -67,7 +66,7 @@ export const AssetFilters = ({
       />
 
       {/* CATEGORY */}
-
+      {/* 
       <Select
         placeholder="Filter by Category"
         options={categoryOptions}
@@ -77,6 +76,16 @@ export const AssetFilters = ({
 
           console.log("Selected Category ID:", categoryId);
 
+          onCategoryChange(categoryId);
+        }}
+      /> */}
+
+      <Select
+        placeholder="Filter by Category"
+        options={categoryOptions}
+        value={categoryFilter}
+        onChange={(categoryId) => {
+          console.log("Selected Category ID:", categoryId);
           onCategoryChange(categoryId);
         }}
       />

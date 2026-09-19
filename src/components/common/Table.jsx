@@ -10,13 +10,13 @@ export const Table = ({
   return (
     <div className="w-full overflow-hidden border border-slate-200 rounded-xl bg-white shadow-xs">
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse text-sm">
+        <table className="w-full text-left border-collapse text-xs">
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50/75">
               {headers.map((h, i) => (
                 <th
                   key={i}
-                  className="py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider"
+                  className="py-2 px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-wider"
                 >
                   {h}
                 </th>

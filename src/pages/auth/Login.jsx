@@ -4,6 +4,7 @@ import { ShieldCheck, Eye, EyeOff } from "lucide-react";
 
 import { authService } from "../../services/authService";
 import { useAuth } from "../../hooks/useAuth";
+import { BRAND_NAME } from "../../utils/constants";
 
 export const Login = () => {
   const navigate = useNavigate();
@@ -59,8 +60,17 @@ export const Login = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-12">
-      <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-white p-8 shadow-2xl sm:p-10">
+    <div
+      className="relative flex min-h-screen items-center justify-center bg-slate-950 bg-cover bg-center bg-no-repeat px-4 py-12"
+      style={{
+        backgroundImage: "url('/login.jpg')",
+      }}
+    >
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-[2px]" />
+
+      {/* Login Card */}
+      <div className="relative z-10 w-full max-w-md rounded-2xl border border-slate-800 bg-white/95 p-8 shadow-2xl backdrop-blur-md sm:p-10">
         {/* Header */}
         <div className="mb-8 text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
@@ -68,7 +78,7 @@ export const Login = () => {
           </div>
 
           <h2 className="mt-4 text-2xl font-bold tracking-tight text-slate-900">
-            EquipTrack AMS
+            {BRAND_NAME} AMS
           </h2>
 
           <p className="mt-1 text-xs text-slate-500">
@@ -129,7 +139,8 @@ export const Login = () => {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 disabled={loading}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-500 hover:text-slate-700"
               >
                 {showPassword ? (
                   <EyeOff className="h-5 w-5" />
@@ -144,7 +155,7 @@ export const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-sky-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full cursor-pointer rounded-lg bg-sky-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>
@@ -153,3 +164,5 @@ export const Login = () => {
     </div>
   );
 };
+
+export default Login;

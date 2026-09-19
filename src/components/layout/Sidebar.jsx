@@ -1,4 +1,5 @@
 import React from "react";
+import { BRAND_NAME } from "../../utils/constants";
 import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -56,41 +57,46 @@ export const Sidebar = () => {
   return (
     <aside
       className="
-        hidden lg:flex
-        flex-col
-        w-56
-        bg-slate-900
-        border-r border-slate-800
-        text-white
-        min-h-screen
-        shrink-0
-      "
+  hidden lg:flex
+  flex-col
+  fixed top-0 left-0
+  w-56
+  h-screen
+  overflow-y-hidden
+  bg-slate-900
+  border-r border-slate-800
+  text-white
+  shrink-0
+  z-50
+"
     >
       {/* ================= HEADER ================= */}
       <div
         className="
-          flex
-          h-16
-          items-center
-          px-4
-          border-b border-slate-800
-          gap-2.5
-        "
+    flex
+    h-14
+    shrink-0
+    items-center
+    px-5
+    pt-2
+    border-b border-slate-800
+    gap-2.5
+  "
       >
         {/* Logo */}
         <div
           className="
-            w-8 h-8
-            rounded-lg
-            bg-sky-500
-            flex items-center justify-center
-            font-bold
-            text-sm
-            text-white
-            shadow-md
-            shadow-sky-500/20
-            shrink-0
-          "
+  w-9 h-9
+  rounded-lg
+  bg-sky-500
+  flex items-center justify-center
+  font-bold
+  text-sm
+  text-white
+  shadow-md
+  shadow-sky-500/20
+  shrink-0
+"
         >
           A
         </div>
@@ -106,7 +112,7 @@ export const Sidebar = () => {
               text-white
             "
           >
-            PDPL
+            {BRAND_NAME}
           </h1>
 
           <p

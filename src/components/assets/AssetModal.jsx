@@ -128,7 +128,7 @@ export const AssetModal = ({
             marginTop: "15px",
           }}
         >
-          <div>
+          {/* <div>
             <label style={{ fontSize: "12px", fontWeight: "bold" }}>
               Asset Tag *
             </label>
@@ -146,7 +146,7 @@ export const AssetModal = ({
                 fontSize: "12px",
               }}
             />
-          </div>
+          </div> */}
 
           <div>
             <label style={{ fontSize: "12px", fontWeight: "bold" }}>

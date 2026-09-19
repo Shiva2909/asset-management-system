@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getEmployees } from "../../services/employeeService";
+import { Users } from "lucide-react";
 
 export default function Employees() {
   const [employees, setEmployees] = useState([]);
@@ -34,14 +35,21 @@ export default function Employees() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 px-3 pt-0 pb-3">
-      <div className="mx-auto w-full max-w-6xl">
-        {/* HEADER */}
-
-        <div className="mb-3 mt-0">
-          <h1 className="text-lg font-semibold text-slate-900">Employees</h1>
-
-          <p className="text-[11px] text-slate-500">Employee information</p>
+    <div className="min-h-screen bg-slate-50 p-3 sm:p-5">
+      <div className="mx-auto w-full max-w-6xl space-y-4">
+        {/* HEADER - Upar shift kiya aur Maintenance ki tarah highlight kiya */}
+        <div className="-mt-8 sm:-mt-10">
+          <div className="flex items-center gap-2">
+            <div className="rounded-lg bg-blue-100 p-1.5 text-blue-700">
+              <Users size={18} />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-slate-800 sm:text-xl">
+                Employees
+              </h1>
+              <p className="text-[11px] text-slate-500">Employee information</p>
+            </div>
+          </div>
         </div>
 
         {/* LOADING */}

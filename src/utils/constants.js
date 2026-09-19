@@ -1,3 +1,5 @@
+export const BRAND_NAME = "Unios";
+
 export const ASSET_STATUS = {
   AVAILABLE: "Available",
   ASSIGNED: "Assigned",

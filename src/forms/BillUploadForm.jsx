@@ -1,13 +1,12 @@
 import React, { useState } from "react";
-import ReactSelect from "react-select"; // Searchable dropdown
+import ReactSelect from "react-select";
 import { Input } from "../components/common/Input";
 import { FileUpload } from "../components/common/FileUpload";
 import { Button } from "../components/common/Button";
-import { validateBill } from "../utils/validators";
 
 export const BillUploadForm = ({ assets = [], onSubmit, onCancel }) => {
   const [values, setValues] = useState({
-    assetID: "", // assetTag ki jagah assetID
+    assetID: "",
     billNumber: "",
     amount: "",
     billDate: new Date().toISOString().split("T")[0],
@@ -32,8 +31,6 @@ export const BillUploadForm = ({ assets = [], onSubmit, onCancel }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    // File validation
     if (!values.file) {
       setErrors((prev) => ({ ...prev, file: "Invoice document is required" }));
       return;
@@ -45,24 +42,74 @@ export const BillUploadForm = ({ assets = [], onSubmit, onCancel }) => {
       }));
       return;
     }
-
-    onSubmit(values); // Seedha object bhejo, hook handle karega FormData
+    onSubmit(values);
   };
 
-  // Map for searchable dropdown
   const assetOptions = assets.map((a) => ({
     value: a.AssetID,
     label: `${a.AssetTag} — ${a.AssetName}`,
   }));
 
+  const customStyles = {
+    control: (provided) => ({
+      ...provided,
+      minHeight: "34px",
+      fontSize: "13px",
+      borderColor: "#cbd5e1",
+      boxShadow: "none",
+      "&:hover": { borderColor: "#94a3b8" },
+    }),
+    valueContainer: (provided) => ({
+      ...provided,
+      padding: "0px 6px",
+    }),
+    input: (provided) => ({
+      ...provided,
+      margin: "0px",
+      fontSize: "13px",
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      fontSize: "13px",
+      color: "#1e293b",
+    }),
+    placeholder: (provided) => ({
+      ...provided,
+      fontSize: "13px",
+      color: "#94a3b8",
+    }),
+    indicatorSeparator: () => ({ display: "none" }),
+    dropdownIndicator: (provided) => ({
+      ...provided,
+      padding: "4px",
+    }),
+    menuList: (provided) => ({
+      ...provided,
+      padding: "4px",
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      padding: "4px 8px",
+      fontSize: "12px",
+      lineHeight: "1.2",
+      backgroundColor: state.isSelected
+        ? "#e2e8f0"
+        : state.isFocused
+          ? "#f1f5f9"
+          : "transparent",
+      color: "#1e293b",
+    }),
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-3">
       <div className="flex flex-col space-y-1">
-        <label className="text-sm font-medium text-slate-700">
+        <label className="text-xs font-semibold text-slate-700">
           Associated Asset *
         </label>
         <ReactSelect
           options={assetOptions}
+          styles={customStyles}
           isSearchable={true}
           placeholder="Select or search hardware..."
           value={
@@ -82,33 +129,39 @@ export const BillUploadForm = ({ assets = [], onSubmit, onCancel }) => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="[&_input]:py-1.5 [&_input]:text-xs">
+          <Input
+            label="Bill / Invoice Number *"
+            name="billNumber"
+            value={values.billNumber}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className="[&_input]:py-1.5 [&_input]:text-xs">
+          <Input
+            label="Amount *"
+            name="amount"
+            type="number"
+            step="0.01"
+            value={values.amount}
+            onChange={handleChange}
+            required
+          />
+        </div>
+      </div>
+
+      <div className="[&_input]:py-1.5 [&_input]:text-xs">
         <Input
-          label="Bill / Invoice Number *"
-          name="billNumber"
-          value={values.billNumber}
-          onChange={handleChange}
-          required
-        />
-        <Input
-          label="Amount *"
-          name="amount"
-          type="number"
-          step="0.01"
-          value={values.amount}
+          label="Bill Date *"
+          name="billDate"
+          type="date"
+          value={values.billDate}
           onChange={handleChange}
           required
         />
       </div>
-
-      <Input
-        label="Bill Date *"
-        name="billDate"
-        type="date"
-        value={values.billDate}
-        onChange={handleChange}
-        required
-      />
 
       <FileUpload
         file={values.file}
@@ -117,7 +170,7 @@ export const BillUploadForm = ({ assets = [], onSubmit, onCancel }) => {
         error={errors.file}
       />
 
-      <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+      <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
         <Button variant="secondary" type="button" onClick={onCancel}>
           Cancel
         </Button>
