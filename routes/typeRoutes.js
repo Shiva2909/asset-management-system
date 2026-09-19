@@ -1,14 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const { addType, getTypes } = require('../controllers/typeController');
+const { addType, getTypes, editType, deleteType } = require('../controllers/typeController');
+
 
 
 const { verifyToken, verifyAdmin } = require('../middleware/authMiddleware'); 
+router.post('/types',verifyToken,verifyAdmin, addType);
+router.get('/types',verifyToken, getTypes);
+router.put('/types/:id',verifyToken,verifyAdmin, editType);     // Edit route
+router.delete('/types/:id', verifyToken,verifyAdmin,deleteType); // Delete route
 
 
-router.get('/types', verifyToken, getTypes);
-  
 
-router.post('/types', verifyToken, verifyAdmin, addType);
 
 module.exports = router;
